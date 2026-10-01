@@ -22,7 +22,8 @@ if [ ! -x "$RUNTIME/node_modules/.bin/mojulo" ]; then
   npm install --prefix "$RUNTIME" --no-audit --no-fund --save-exact "mojulo@$PACKAGE_VERSION"
 fi
 
-INSTALLED="$("$RUNTIME/node_modules/.bin/mojulo" --version)"
+VERSION_OUTPUT="$("$RUNTIME/node_modules/.bin/mojulo" --version)"
+INSTALLED="${VERSION_OUTPUT#mojulo }"
 if [ "$INSTALLED" != "$PACKAGE_VERSION" ]; then
   echo "Expected mojulo $PACKAGE_VERSION but installed $INSTALLED." >&2
   exit 3
