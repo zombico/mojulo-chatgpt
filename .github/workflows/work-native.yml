@@ -19,7 +19,7 @@ jobs:
           bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
       - name: Verify pinned version
         run: |
-          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "3.0.0"
+          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo 3.0.0"
       - name: Verify local CLI orientation
         run: |
           "$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" orient
