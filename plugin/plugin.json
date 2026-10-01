@@ -1,0 +1,26 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "mojulo",
+  "version": "0.1.0",
+  "description": "Build and export deterministic 3D objects, worlds and games with Mojulo.",
+  "author": {
+    "name": "Franz Ombico",
+    "url": "https://mojulo.ai"
+  },
+  "homepage": "https://mojulo.ai",
+  "repository": "https://github.com/zombico/mojulo-chatgpt",
+  "license": "Apache-2.0",
+  "keywords": ["3d", "procedural", "mcp", "glb", "stl", "worldbuilding"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Mojulo",
+        "shortDescription": "Deterministic 3D with AI",
+        "longDescription": "Build, edit and export deterministic 3D objects, scenes, worlds and games through Mojulo's recipe-based tool surface. Mojulo stores compact recipes and recompiles them deterministically; supported exports include formats such as GLB, HTML, STL and bundles when the underlying recipe supports them.",
+        "developerName": "Franz Ombico",
+        "category": "Developer Tools",
+        "capabilities": ["3D modeling", "procedural worlds", "3D export", "3D printing"]
+      }
+    }
+  }
+}
