@@ -1,0 +1,28 @@
+name: Work-native plugin
+
+on:
+  push:
+    branches: [main, feat/work-native-plugin]
+  pull_request:
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+      - name: Bootstrap Mojulo in a fresh workspace
+        run: |
+          mkdir -p "$RUNNER_TEMP/mojulo-work-test"
+          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
+      - name: Verify pinned version
+        run: |
+          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo 3.0.0"
+      - name: Verify local CLI orientation
+        run: |
+          "$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" orient
+      - name: Verify workspace-local state
+        run: |
+          test -d "$RUNNER_TEMP/mojulo-work-test/.mojulo"
