@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "mojulo-work",
-  "version": "0.1.0",
-  "description": "Run Mojulo locally inside ChatGPT Work to build, edit and export deterministic 3D artifacts using the Work environment's compute.",
+  "version": "0.2.0",
+  "description": "Build, edit and export deterministic 3D artifacts with Mojulo running locally in supported ChatGPT Work and Codex execution environments.",
   "author": {
     "name": "Franz Ombico",
     "url": "https://mojulo.ai"
@@ -10,22 +10,36 @@
   "homepage": "https://mojulo.ai",
   "repository": "https://github.com/zombico/mojulo-chatgpt",
   "license": "Apache-2.0",
-  "keywords": ["3d", "procedural", "chatgpt-work", "glb", "worldbuilding"],
+  "keywords": [
+    "3d",
+    "procedural",
+    "chatgpt-work",
+    "glb",
+    "worldbuilding"
+  ],
   "skills": "./skills/",
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Mojulo",
-        "shortDescription": "Procedural 3D in Work",
-        "longDescription": "Build, edit and export deterministic 3D objects, scenes, worlds and games by running Mojulo locally inside ChatGPT Work. The skill bootstraps the pinned Mojulo package into the active Work workspace and keeps Mojulo recipes, refs, checkpoints and exports with that workspace. This Work-native edition does not require hosted Mojulo execution.",
+        "shortDescription": "Procedural 3D with Mojulo",
+        "longDescription": "Build, edit and export deterministic 3D objects, scenes, worlds and games with Mojulo running locally in supported ChatGPT Work and Codex execution environments. Mojulo keeps procedural recipes and refs in the active workspace so existing artifacts can be edited in place and portable state can be used for continuation. Requires Node.js 22.14+ and npm access. This skills-only plugin does not require or send geometry to a hosted Mojulo execution service.",
         "developerName": "Franz Ombico",
         "category": "Developer Tools",
-        "capabilities": ["3D modeling", "procedural worlds", "3D export", "local execution"],
+        "capabilities": [
+          "3D modeling",
+          "procedural worlds",
+          "3D export",
+          "local execution"
+        ],
         "defaultPrompt": [
           "Build a procedural city with Mojulo",
           "Create a 3D model with Mojulo",
           "Edit my Mojulo model and export a GLB"
-        ]
+        ],
+        "websiteURL": "https://mojulo.ai",
+        "logo": "./assets/logo.svg",
+        "composerIcon": "./assets/composer-icon.svg"
       }
     }
   }
