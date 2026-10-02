@@ -39,3 +39,35 @@ jobs:
       - name: Verify workspace-local state
         run: |
           test -d "$RUNNER_TEMP/mojulo-work-test/.mojulo"
+
+      - name: Export portable bundle from workspace A
+        env:
+          MOJULO: ${{ runner.temp }}/mojulo-work-test/.mojulo-runtime/bin/mojulo-work
+        run: |
+          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-a.json"
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.dir) process.exit(1); for(const n of ["recipe.json","model.glb","world.html"]) if(!fs.existsSync(x.dir+"/"+n)) process.exit(2); fs.writeFileSync(process.argv[2],x.dir)' "$RUNNER_TEMP/bundle-a.json" "$RUNNER_TEMP/bundle-a-dir"
+
+      - name: Restore recipe into fresh workspace B
+        run: |
+          mkdir -p "$RUNNER_TEMP/mojulo-work-restore"
+          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-restore"
+          A_DIR="$(cat "$RUNNER_TEMP/bundle-a-dir")"
+          RECIPE="$A_DIR/recipe.json"
+          node -e 'const fs=require("fs"); const manifest=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); fs.writeFileSync(process.argv[2],JSON.stringify({title:"Work-native CI",ref:"sk_work_ci",manifest}))' "$RECIPE" "$RUNNER_TEMP/restore.json"
+          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call create_sketch --json "@$RUNNER_TEMP/restore.json"
+          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-b.json"
+
+      - name: Compare recovery hashes
+        run: |
+          A_DIR="$(cat "$RUNNER_TEMP/bundle-a-dir")"
+          B_DIR="$(node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(x.dir)' "$RUNNER_TEMP/bundle-b.json")"
+          node -e 'const fs=require("fs"),crypto=require("crypto"),path=require("path"); const [a,b]=process.argv.slice(1); const h=f=>crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex"); for(const n of ["recipe.json","model.glb","world.html"]){const x=h(path.join(a,n)),y=h(path.join(b,n)); if(x!==y){console.error(n,x,y);process.exit(1)}}' "$A_DIR" "$B_DIR"
+
+      - name: Refuse duplicate restore
+        run: |
+          set +e
+          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call create_sketch --json "@$RUNNER_TEMP/restore.json" >"$RUNNER_TEMP/duplicate.out" 2>&1
+          STATUS=$?
+          set -e
+          test "$STATUS" -ne 0
+          grep -Eqi 'exists|REF_EXISTS' "$RUNNER_TEMP/duplicate.out"
