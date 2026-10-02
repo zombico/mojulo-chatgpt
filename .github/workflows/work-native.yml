@@ -2,11 +2,11 @@ name: Work-native plugin
 
 on:
   push:
-    branches: [main, feat/work-native-plugin]
+    branches: [main, feat/work-native-release-candidate]
   pull_request:
 
 jobs:
-  bootstrap:
+  work-native:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,12 +17,25 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/mojulo-work-test"
           bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
-      - name: Verify pinned version
+      - name: Verify bootstrap reuse
         run: |
+          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
           test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo 3.0.0"
       - name: Verify local CLI orientation
         run: |
           "$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" orient
+      - name: Mint, export, and edit the same ref
+        env:
+          MOJULO: ${{ runner.temp }}/mojulo-work-test/.mojulo-runtime/bin/mojulo-work
+        run: |
+          "$MOJULO" call compose_world --json '{"base":"city","seed":91,"ref":"sk_work_ci","title":"Work-native CI","overrides":{"context":{"depth":2},"region":{"x":0,"y":0,"w":16,"d":16}}}' > "$RUNNER_TEMP/mint.json"
+          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/before.json"
+          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.path || !fs.existsSync(x.path)) process.exit(1)' "$RUNNER_TEMP/before.json"
+          BEFORE="$(node -e 'const fs=require("fs"),crypto=require("crypto"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(crypto.createHash("sha256").update(fs.readFileSync(x.path)).digest("hex"))' "$RUNNER_TEMP/before.json")"
+          "$MOJULO" call update_sketch --json '{"ref":"sk_work_ci","patch":[{"op":"set","path":"/seed","value":92}]}' > "$RUNNER_TEMP/edit.json"
+          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/after.json"
+          AFTER="$(node -e 'const fs=require("fs"),crypto=require("crypto"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.path || !fs.existsSync(x.path)) process.exit(2); process.stdout.write(crypto.createHash("sha256").update(fs.readFileSync(x.path)).digest("hex"))' "$RUNNER_TEMP/after.json")"
+          test "$BEFORE" != "$AFTER"
       - name: Verify workspace-local state
         run: |
           test -d "$RUNNER_TEMP/mojulo-work-test/.mojulo"

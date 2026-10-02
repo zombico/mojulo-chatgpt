@@ -1,28 +1,56 @@
-# Work-native experiment
+# Mojulo Work-native plugin
 
-This package is a skills-only ChatGPT Work experiment. It deliberately contains no MCP configuration and no lifecycle hooks.
+Mojulo's Work-native plugin is a skills-only distribution path for running Mojulo inside the agent's writable execution environment. It contains no MCP configuration and does not require hosted Mojulo compute.
 
-The Mojulo skill instructs Work to run the packaged bootstrap script in its own writable workspace. The script:
+## Verified architecture
+
+The local/personal marketplace field test verified this path end to end:
+
+```text
+ChatGPT / Codex
+      |
+ installed Mojulo skill
+      |
+ Work execution environment
+      |
+ packaged bootstrap.sh
+      |
+ pinned mojulo@3.0.0
+      |
+ workspace-local Mojulo CLI + state
+      |
+ generated 3D artifact
+```
+
+GitHub CI separately verifies clean Linux bootstrap, pinned-version reuse, `orient`, deterministic city minting, GLB export, and in-place editing of the same ref.
+
+The HTTP MCP bridge in this repository remains an optional transport for clients that need remote MCP. It is not required by the Work-native plugin.
+
+## Runtime behavior
+
+The skill runs the packaged bootstrap script in the active writable workspace. The script:
 
 1. requires Node >=22.14 and npm;
 2. installs exactly `mojulo@3.0.0` under `.mojulo-runtime`;
-3. creates workspace-local `.mojulo` state;
-4. creates `.mojulo-runtime/bin/mojulo-work`, which invokes Mojulo locally with `MOJULO_HOME` bound to that workspace.
+3. reuses a correct existing install and replaces a mismatched workspace-local version;
+4. creates workspace-local `.mojulo` state;
+5. creates `.mojulo-runtime/bin/mojulo-work`, binding `MOJULO_HOME` to that workspace.
 
-This tests whether the public skills-only plugin path can act as distribution/orchestration for Mojulo while Work supplies the execution compute.
+No geometry, render or export needs to be sent to a Mojulo-operated service for this path.
 
-## Acceptance test
+## Release acceptance test
 
-In a fresh ChatGPT Work task with this plugin installed:
+For a release candidate, test from a fresh Work task with the plugin installed:
 
-1. Ask Mojulo to create a small procedural city with seed 91.
-2. Confirm the skill bootstraps `mojulo@3.0.0` locally.
-3. Export GLB.
-4. Edit the same ref to seed 92 and verify the model changed.
-5. Export HTML, GLB, ZIP/bundle and recipe.
-6. Save a recovery checkpoint.
-7. Restore it in a second fresh Work workspace.
-8. Compare export hashes and verify duplicate restore refusal.
-9. Record startup warnings and distinguish runtime checks from visual/download checks.
+1. Ask Mojulo to create a small procedural city with seed 91 without giving installation or CLI instructions.
+2. Confirm the skill bootstraps the pinned Mojulo version and returns a real GLB artifact.
+3. Edit the same ref to seed 92 and verify the GLB changes.
+4. Export HTML, GLB, bundle and recipe.
+5. Save a portable recovery checkpoint.
+6. Restore it in a second fresh workspace.
+7. Compare export hashes and verify duplicate restore refusal.
+8. Record startup warnings and distinguish runtime checks from visual/download checks.
 
-A successful result proves the Work-native path. It does not prove persistence of an underlying Work VM across separate tasks; portable Mojulo recipes/checkpoints remain the recovery boundary.
+The first marketplace field test has already verified autonomous skill discovery/bootstrap and artifact minting. The recovery sequence remains the portability/reproducibility release gate.
+
+A successful recovery test does not imply persistence of an underlying Work VM across separate tasks. Portable Mojulo recipes/checkpoints are the intended recovery boundary.
