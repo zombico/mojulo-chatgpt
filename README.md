@@ -1,86 +1,49 @@
-# Mojulo ChatGPT
+# Mojulo 3.0.0 x Google AI Ecosystem Bridge
 
-Hosted ChatGPT integration layer for **Mojulo 3.0.0**.
+A production blueprint and starter repository for integrating **Mojulo 3.0.0** (the 3D compiler for coding agents) with the **Google AI Ecosystem**:
+- **Google Genkit**: Build multi-turn autonomous agents that reason and design 3D objects.
+- **Vertex AI & Gemini 2.5**: Native Function Calling with `@google/genai`.
+- **Google Drive MCP**: Automatically sequence 3D fabrication, recipe archiving, and documentation uploads to Google Drive folders.
 
-This repository is intentionally separate from [zombico/mojulo](https://github.com/zombico/mojulo). It consumes the published Mojulo package unchanged and exposes its existing stdio MCP server through a Streamable HTTP MCP endpoint suitable for ChatGPT Developer Mode and, after tenant isolation/authentication work, a public plugin.
+---
 
-## What this proves
-
-```
-ChatGPT / Codex
-      |
-      | Streamable HTTP MCP
-      v
-mojulo-chatgpt
-      |
-      | stdio MCP
-      v
-mojulo@3.0.0
-```
-
-The bridge does not maintain a second list of Mojulo tools. It asks Mojulo for `tools/list` and forwards `tools/call`, preserving Mojulo's own routing surface such as `forward_context`.
-
-## Run locally
-
-Requires Node **22.14+**.
+## 🚀 Quickstart
 
 ```bash
+# 1. Install dependencies
 npm install
-MOJULO_BRIDGE_TOKEN=dev-secret npm start
+
+# 2. Configure environment
+cp .env.example .env
+# Set GEMINI_API_KEY="your-key"
+
+# 3. Run Google Genkit agent
+npm run dev:genkit
+
+# 4. Run Vertex AI Gemini function-calling agent
+npm run dev:vertex
+
+# 5. Run Cloud Run HTTP MCP Bridge
+npm run dev:bridge
 ```
 
-The MCP endpoint is:
+---
 
-```
-http://localhost:8787/mcp
-```
+## 🏛 Architecture Overview
 
-Health check:
+Mojulo is a **3D compiler for coding agents**, not a black-box 3D generator. 
+- Everything is stored as a **small deterministic recipe** in a local SQLite kernel (`~/.mojulo/`).
+- Compiles geometry identically on every read.
+- Handoffs to **Godot**, **Blender Cycles**, **Unity**, and **print-ready STL / 3MF** at true millimeter scale with slicer gates.
+- Operates under a **Spine + 17 Tool Packs** drawerization model.
 
-```bash
-curl http://localhost:8787/health
-```
+---
 
-By default the workspace is `./data/mojulo`. Override it with:
+## 📂 Repository Structure
 
-```bash
-MOJULO_HOME=/absolute/workspace/path npm start
-```
-
-## Docker
-
-```bash
-docker build -t mojulo-chatgpt .
-docker run --rm -p 8787:8787 \
-  -e MOJULO_BRIDGE_TOKEN=dev-secret \
-  -v mojulo-data:/data \
-  mojulo-chatgpt
-```
-
-## ChatGPT Developer Mode milestone
-
-Deploy this container behind HTTPS, set `MOJULO_BRIDGE_TOKEN`, and connect the resulting `https://.../mcp` endpoint privately. Use the acceptance flow:
-
-1. Call `forward_context`.
-2. Create a procedural city with seed 91.
-3. Export GLB.
-4. Edit the same ref to seed 92 and verify it changes.
-5. Export HTML, GLB, bundle and recipe as supported by Mojulo's routing/tool contract.
-6. Create/restore the supported recovery checkpoint.
-7. Compare deterministic export hashes.
-
-## Plugin package
-
-`plugin/` contains the portable Agent Plugins skeleton:
-
-- `plugin.json`
-- `mcp.json`
-- `skills/mojulo/SKILL.md`
-
-The committed MCP URL is the intended production endpoint, `https://mcp.mojulo.ai/mcp`. Do not submit it until that endpoint exists and the public multi-user security work in [SECURITY.md](./SECURITY.md) is complete.
-
-## Current limitation: single tenant
-
-The first milestone intentionally maps one bridge process to one `MOJULO_HOME`. That is suitable for private testing, not for a public shared plugin.
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) and [SECURITY.md](./SECURITY.md) for the production path.
+- `src/mojulo-client.ts`: MCP stdio transport client managing sub-process communication with `npx mojulo`.
+- `src/genkit-agent.ts`: Genkit agent defining custom flows, Zod validation schemas, and tool execution.
+- `src/vertex-agent.ts`: Direct Gemini 2.5 Flash / Pro function declarations and multi-turn reasoning loops.
+- `src/drive-orchestrator.ts`: Google Drive API orchestration for folders, 3D meshes, and technical manuals.
+- `src/mcp-server-bridge.ts`: Cloud Run microservice exposing Mojulo MCP over HTTP/SSE.
+- `Dockerfile`: Optimized container for deployment on Google Cloud Run.
