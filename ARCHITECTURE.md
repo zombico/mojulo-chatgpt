@@ -2,7 +2,21 @@
 
 ## Purpose
 
-`mojulo-chatgpt` is a transport and deployment adapter. It does not fork, modify, or reimplement Mojulo.
+`mojulo-chatgpt` is Mojulo's ChatGPT integration and orientation package. It does not fork, modify, or reimplement Mojulo.
+
+## Integration layers
+
+- `dot/`: portable instructions for ongoing agent work, scene continuity, and capability-based execution routing. These files are not automatically installed platform configuration.
+- `work-plugin/`: skills-only local execution with pinned Mojulo 3.0.0, workspace-local state, and ordinary artifact handoff. No MCP configuration is required.
+- `codex/HANDOFF.md`: source-task brief targeting the core or adapter repository with reproduction and acceptance criteria.
+- `plugin/` and JavaScript HTTP bridge: optional MCP transport described below.
+- Google TypeScript adapters: retained separately; see [Google bridge](docs/GOOGLE-BRIDGE.md).
+
+Dots can execute with available tools or create Work/Codex tasks. This package supplies domain orientation; it adds no Dot runtime or replacement harness. Saved recipes/checkpoints, rather than agent notes or VM persistence, carry portable artifact state.
+
+## Optional JavaScript HTTP bridge
+
+The remaining sections describe the existing JavaScript bridge (`src/server.js`), not the Work-native plugin or the separate TypeScript Google bridge.
 
 ```
 ChatGPT / Codex
