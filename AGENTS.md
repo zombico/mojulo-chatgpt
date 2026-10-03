@@ -3,6 +3,7 @@
 This repository supplies ChatGPT orientation and integration surfaces. Core compiler implementation belongs in `zombico/mojulo`.
 
 - Read `README.md` and `ARCHITECTURE.md` before changing integration behavior.
+- Read `docs/ORIENTATION.md` for shared operating instructions and `docs/GETTING-STARTED.md` for direct paths. Dots are optional; never gate local execution on Pro or Dot access.
 - `dot/` contains portable instructions, not a Dot runtime or platform configuration schema.
 - `codex/HANDOFF.md` is the source-task template.
 - Keep `work-plugin/` skills-only. Bootstrap pins Mojulo 3.0.0 with workspace-local state/runtime. Add no MCP configuration or hosted compute without an explicit architecture request.

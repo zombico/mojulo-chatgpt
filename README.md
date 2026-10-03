@@ -1,20 +1,23 @@
-# Mojulo for ChatGPT, Dots, Work, and Codex
+# Mojulo for ChatGPT Work and Codex
 
 Mojulo's ChatGPT integration and orientation package. It helps agents understand Mojulo, use native operations, preserve editable 3D recipes, and hand tasks to an environment with the required tools.
 
 Mojulo is a 3D compiler for coding agents. Core implementation lives in [zombico/mojulo](https://github.com/zombico/mojulo).
 
+**Dots are optional.** Start directly in Work or Codex; Mojulo does not require a Pro subscription or a dot. Platform tools, models, usage limits, and plugin access still depend on your account and environment. See [Getting started without Dots](docs/GETTING-STARTED.md).
+
 ## Choose a starting point
 
 | Goal | Start here |
 | --- | --- |
-| Give a dot ongoing responsibility for a Mojulo project | [Dot orientation](dot/ORIENTATION.md) |
 | Build, edit, or export a 3D artifact in Work | [Work-native plugin](work-plugin/README.md) |
 | Fix core or adapter source with Codex | [Engineering handoff](codex/HANDOFF.md) |
+| Learn Mojulo in any agent session | [Shared orientation](docs/ORIENTATION.md) |
 | Choose an execution environment | [Execution routing](dot/EXECUTION-ROUTING.md) |
+| Add optional ongoing Dot coordination | [Dot orientation](dot/ORIENTATION.md) |
 | Understand integration boundaries | [Architecture](ARCHITECTURE.md) |
 
-## Dots and Mojulo
+## Optional Dots integration
 
 OpenAI describes dots as always-on agents that continue work between conversations and can create Work or Codex tasks. They can also execute with available tools. See [Meet dots](https://learn.chatgpt.com/docs/dots) and [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory).
 

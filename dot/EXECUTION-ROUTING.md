@@ -1,5 +1,7 @@
 # Route by task and available tools
 
+Use this routing in ordinary Work/Codex sessions as well as optional Dots. Start with [shared orientation](../docs/ORIENTATION.md). Do not route through a dot when an authorized executor is already available.
+
 | Request | Action |
 | --- | --- |
 | Explain Mojulo or plan a scene | Reason from current context and relevant runtime documentation |
@@ -8,6 +10,7 @@
 | Fix compiler or tool behavior | Prepare a Codex task for `zombico/mojulo` |
 | Fix plugin, bootstrap, or adapter | Prepare a Codex task for `zombico/mojulo-chatgpt` |
 | Use an explicitly requested remote MCP deployment | Use its configured bridge and access/isolation controls |
+| Ordinary chat without shell/tools | Prepare a brief for a user-started Work/Codex session; no Dot or Pro upgrade prerequisite |
 | Runtime, source, or state unavailable | Report the missing dependency and provide a concrete handoff |
 
 A dot may execute artifact or engineering work itself when tools and access suffice. Work and Codex are options, not mandatory hops.
