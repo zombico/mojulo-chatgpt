@@ -1,49 +1,50 @@
-# Mojulo 3.0.0 x Google AI Ecosystem Bridge
+# Mojulo for ChatGPT, Dots, Work, and Codex
 
-A production blueprint and starter repository for integrating **Mojulo 3.0.0** (the 3D compiler for coding agents) with the **Google AI Ecosystem**:
-- **Google Genkit**: Build multi-turn autonomous agents that reason and design 3D objects.
-- **Vertex AI & Gemini 2.5**: Native Function Calling with `@google/genai`.
-- **Google Drive MCP**: Automatically sequence 3D fabrication, recipe archiving, and documentation uploads to Google Drive folders.
+Mojulo's ChatGPT integration and orientation package. It helps agents understand Mojulo, use native operations, preserve editable 3D recipes, and hand tasks to an environment with the required tools.
 
----
+Mojulo is a 3D compiler for coding agents. Core implementation lives in [zombico/mojulo](https://github.com/zombico/mojulo).
 
-## 🚀 Quickstart
+## Choose a starting point
 
-```bash
-# 1. Install dependencies
-npm install
+| Goal | Start here |
+| --- | --- |
+| Give a dot ongoing responsibility for a Mojulo project | [Dot orientation](dot/ORIENTATION.md) |
+| Build, edit, or export a 3D artifact in Work | [Work-native plugin](work-plugin/README.md) |
+| Fix core or adapter source with Codex | [Engineering handoff](codex/HANDOFF.md) |
+| Choose an execution environment | [Execution routing](dot/EXECUTION-ROUTING.md) |
+| Understand integration boundaries | [Architecture](ARCHITECTURE.md) |
 
-# 2. Configure environment
-cp .env.example .env
-# Set GEMINI_API_KEY="your-key"
+## Dots and Mojulo
 
-# 3. Run Google Genkit agent
-npm run dev:genkit
+OpenAI describes dots as always-on agents that continue work between conversations and can create Work or Codex tasks. They can also execute with available tools. See [Meet dots](https://learn.chatgpt.com/docs/dots) and [Tasks and memory](https://learn.chatgpt.com/docs/dots/tasks-and-memory).
 
-# 4. Run Vertex AI Gemini function-calling agent
-npm run dev:vertex
+Our integration design gives that agent Mojulo orientation and portable task context, while Mojulo supplies the scene model and operations. Routing depends on tools, permissions, and runtime access.
 
-# 5. Run Cloud Run HTTP MCP Bridge
-npm run dev:bridge
+The Markdown files in `dot/` are instructions to read or provide to an agent. They are not an automatically installed Dot API, runtime, or configuration format. Dot notes support continuity; recipes and checkpoints carry recoverable scene state.
+
+## Run artifact work locally
+
+The plugin root is `work-plugin/`. It remains a skills-only package with no MCP configuration or hosted Mojulo compute requirement.
+
+With the plugin installed, ask:
+
+> Use Mojulo to build a small procedural city with seed 91. Export its GLB and recipe, retain the returned ref, and report startup warnings.
+
+For a manual checkout, from the repository root:
+
+```sh
+bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$PWD"
+.mojulo-runtime/bin/mojulo-work orient
 ```
 
----
+Bootstrap requires Node >=22.14 and npm, installs exactly `mojulo@3.0.0`, and creates workspace-local runtime and state. Follow the CLI's orientation, routing, and tool schemas before issuing operations. Top-level Google bridge dependencies are not needed for this path.
 
-## 🏛 Architecture Overview
+For iteration, edit the same ref. Return actual exports together with portable state for continuation in another workspace.
 
-Mojulo is a **3D compiler for coding agents**, not a black-box 3D generator. 
-- Everything is stored as a **small deterministic recipe** in a local SQLite kernel (`~/.mojulo/`).
-- Compiles geometry identically on every read.
-- Handoffs to **Godot**, **Blender Cycles**, **Unity**, and **print-ready STL / 3MF** at true millimeter scale with slicer gates.
-- Operates under a **Spine + 17 Tool Packs** drawerization model.
+## Other integration surfaces
 
----
+- `plugin/` and the JavaScript HTTP bridge remain the optional MCP path, documented in [Architecture](ARCHITECTURE.md).
+- Existing Genkit, Vertex/Gemini, Drive, and Cloud Run material is described in [Google bridge](docs/GOOGLE-BRIDGE.md). Source and package configuration are retained.
+- [Acceptance scenarios](tests/orientation/README.md) cover routing, same-ref edits, recovery handoffs, and truthful reporting. They complement existing runtime CI.
 
-## 📂 Repository Structure
-
-- `src/mojulo-client.ts`: MCP stdio transport client managing sub-process communication with `npx mojulo`.
-- `src/genkit-agent.ts`: Genkit agent defining custom flows, Zod validation schemas, and tool execution.
-- `src/vertex-agent.ts`: Direct Gemini 2.5 Flash / Pro function declarations and multi-turn reasoning loops.
-- `src/drive-orchestrator.ts`: Google Drive API orchestration for folders, 3D meshes, and technical manuals.
-- `src/mcp-server-bridge.ts`: Cloud Run microservice exposing Mojulo MCP over HTTP/SSE.
-- `Dockerfile`: Optimized container for deployment on Google Cloud Run.
+This orientation change adds no Dot runtime, MCP server, or replacement agent harness.
