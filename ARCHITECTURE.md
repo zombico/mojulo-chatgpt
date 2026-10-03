@@ -6,6 +6,10 @@
 
 ## Integration layers
 
+Direct Work and Codex execution are first-class paths. No Dot or Pro-plan check is part of the Mojulo runner. Platform account entitlements still determine available tools; see [Getting started](docs/GETTING-STARTED.md).
+
+- `docs/ORIENTATION.md`: shared operating contract for any agent session.
+
 - `dot/`: portable instructions for ongoing agent work, scene continuity, and capability-based execution routing. These files are not automatically installed platform configuration.
 - `work-plugin/`: skills-only local execution with pinned Mojulo 3.0.0, workspace-local state, and ordinary artifact handoff. No MCP configuration is required.
 - `codex/HANDOFF.md`: source-task brief targeting the core or adapter repository with reproduction and acceptance criteria.
