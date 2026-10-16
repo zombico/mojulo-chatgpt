@@ -7,7 +7,7 @@
 ## Integration layers
 
 - `dot/`: portable instructions for ongoing agent work, scene continuity, and capability-based execution routing. These files are not automatically installed platform configuration.
-- `work-plugin/`: skills-only local execution with pinned Mojulo 3.0.0, workspace-local state, and ordinary artifact handoff. No MCP configuration is required.
+- `work-plugin/`: skills-only local execution with a version-aware runner targeting Mojulo 3.1.0, isolated workspace-local state, and ordinary artifact handoff. No MCP configuration is required.
 - `codex/HANDOFF.md`: source-task brief targeting the core or adapter repository with reproduction and acceptance criteria.
 - `plugin/` and JavaScript HTTP bridge: optional MCP transport described below.
 - Google TypeScript adapters: retained separately; see [Google bridge](docs/GOOGLE-BRIDGE.md).
@@ -34,7 +34,7 @@ MOJULO_HOME
 
 ## Contract boundary
 
-The bridge pins `mojulo@3.0.0` and starts its published `scripts/mcp-stdio.mjs` entrypoint. Tool discovery and tool calls are forwarded through MCP. The bridge intentionally does not duplicate Mojulo's tool table.
+The **separate, optional** bridge currently pins `mojulo@3.0.0` (this integration is not updated by the skills-only 3.1.0 branch) and starts its published `scripts/mcp-stdio.mjs` entrypoint. Tool discovery and tool calls are forwarded through MCP. The bridge intentionally does not duplicate Mojulo's tool table.
 
 This preserves Mojulo's own routing model, including `forward_context`, and makes schema changes visible at the MCP boundary instead of requiring a second hand-maintained API.
 
