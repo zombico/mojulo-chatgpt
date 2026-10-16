@@ -2,72 +2,72 @@ name: Work-native plugin
 
 on:
   push:
-    branches: [main, feat/work-native-release-candidate]
+    branches: [main, '1015-mojulo-3.1-plugin-update']
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  work-native:
+  runner-unit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22.14.0'
-      - name: Bootstrap Mojulo in a fresh workspace
-        run: |
-          mkdir -p "$RUNNER_TEMP/mojulo-work-test"
-          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
-      - name: Verify bootstrap reuse
-        run: |
-          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
-          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo 3.0.0"
-      - name: Verify local CLI orientation
-        run: |
-          "$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" orient
-      - name: Mint, export, and edit the same ref
-        env:
-          MOJULO: ${{ runner.temp }}/mojulo-work-test/.mojulo-runtime/bin/mojulo-work
-        run: |
-          "$MOJULO" call compose_world --json '{"base":"city","seed":91,"ref":"sk_work_ci","title":"Work-native CI","overrides":{"context":{"depth":2},"region":{"x":0,"y":0,"w":16,"d":16}}}' > "$RUNNER_TEMP/mint.json"
-          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/before.json"
-          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.path || !fs.existsSync(x.path)) process.exit(1)' "$RUNNER_TEMP/before.json"
-          BEFORE="$(node -e 'const fs=require("fs"),crypto=require("crypto"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(crypto.createHash("sha256").update(fs.readFileSync(x.path)).digest("hex"))' "$RUNNER_TEMP/before.json")"
-          "$MOJULO" call update_sketch --json '{"ref":"sk_work_ci","patch":[{"op":"set","path":"/seed","value":92}]}' > "$RUNNER_TEMP/edit.json"
-          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/after.json"
-          AFTER="$(node -e 'const fs=require("fs"),crypto=require("crypto"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.path || !fs.existsSync(x.path)) process.exit(2); process.stdout.write(crypto.createHash("sha256").update(fs.readFileSync(x.path)).digest("hex"))' "$RUNNER_TEMP/after.json")"
-          test "$BEFORE" != "$AFTER"
-      - name: Verify workspace-local state
-        run: |
-          test -d "$RUNNER_TEMP/mojulo-work-test/.mojulo"
+      - name: Test runner without needing a published Mojulo release
+        run: node --test tests/runner.test.mjs
 
-      - name: Export portable bundle from workspace A
-        env:
-          MOJULO: ${{ runner.temp }}/mojulo-work-test/.mojulo-runtime/bin/mojulo-work
+  npm-3-1-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.14.0'
+      - name: Check the official Mojulo 3.1.0 npm release
+        id: npm
         run: |
-          "$MOJULO" call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-a.json"
-          node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); if(!x.dir) process.exit(1); for(const n of ["recipe.json","model.glb","world.html"]) if(!fs.existsSync(x.dir+"/"+n)) process.exit(2); fs.writeFileSync(process.argv[2],x.dir)' "$RUNNER_TEMP/bundle-a.json" "$RUNNER_TEMP/bundle-a-dir"
-
-      - name: Restore recipe into fresh workspace B
+          if [ "$(npm view mojulo@3.1.0 version 2>/dev/null)" = "3.1.0" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Registry release verified"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Mojulo 3.1.0 is not published to npm yet. Runtime smoke is deferred, NOT passed. Rerun this workflow after npm publication."
+          fi
+      - name: End-to-end smoke against the published 3.1.0 package
+        if: steps.npm.outputs.available == 'true'
+        shell: bash
         run: |
-          mkdir -p "$RUNNER_TEMP/mojulo-work-restore"
-          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-restore"
-          A_DIR="$(cat "$RUNNER_TEMP/bundle-a-dir")"
-          RECIPE="$A_DIR/recipe.json"
-          node -e 'const fs=require("fs"); const manifest=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); fs.writeFileSync(process.argv[2],JSON.stringify({title:"Work-native CI",ref:"sk_work_ci",manifest}))' "$RECIPE" "$RUNNER_TEMP/restore.json"
-          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call create_sketch --json "@$RUNNER_TEMP/restore.json"
-          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-b.json"
-
-      - name: Compare recovery hashes
-        run: |
-          A_DIR="$(cat "$RUNNER_TEMP/bundle-a-dir")"
-          B_DIR="$(node -e 'const fs=require("fs"); const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(x.dir)' "$RUNNER_TEMP/bundle-b.json")"
-          node -e 'const fs=require("fs"),crypto=require("crypto"),path=require("path"); const [a,b]=process.argv.slice(1); const h=f=>crypto.createHash("sha256").update(fs.readFileSync(f)).digest("hex"); for(const n of ["recipe.json","model.glb","world.html"]){const x=h(path.join(a,n)),y=h(path.join(b,n)); if(x!==y){console.error(n,x,y);process.exit(1)}}' "$A_DIR" "$B_DIR"
-
-      - name: Refuse duplicate restore
-        run: |
-          set +e
-          "$RUNNER_TEMP/mojulo-work-restore/.mojulo-runtime/bin/mojulo-work" call create_sketch --json "@$RUNNER_TEMP/restore.json" >"$RUNNER_TEMP/duplicate.out" 2>&1
-          STATUS=$?
-          set -e
-          test "$STATUS" -ne 0
+          set -euo pipefail
+          R="$GITHUB_WORKSPACE/work-plugin/skills/mojulo/scripts/runner.mjs"
+          A="$RUNNER_TEMP/mojulo-3-1-a"
+          B="$RUNNER_TEMP/mojulo-3-1-b"
+          mkdir -p "$A" "$B"
+          node "$R" install --workspace "$A" > "$RUNNER_TEMP/install-a.json"
+          node "$R" install --workspace "$A" > "$RUNNER_TEMP/reuse.json"
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.reused||x.installed?.version!=="3.1.0")process.exit(1)' "$RUNNER_TEMP/reuse.json"
+          node "$R" exec --workspace "$A" -- orient > "$RUNNER_TEMP/orient.txt"
+          node "$R" exec --workspace "$A" -- call version > "$RUNNER_TEMP/version.json"
+          node "$R" exec --workspace "$A" -- call compose_world --json '{"base":"city","seed":91,"ref":"sk_work_ci","title":"Work-native 3.1 CI","overrides":{"context":{"depth":2},"region":{"x":0,"y":0,"w":16,"d":16}}}' > "$RUNNER_TEMP/mint.json"
+          node "$R" exec --workspace "$A" -- call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/before.json"
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.path||!fs.existsSync(x.path))process.exit(1);fs.copyFileSync(x.path,process.argv[2])' "$RUNNER_TEMP/before.json" "$RUNNER_TEMP/before.glb"
+          node "$R" exec --workspace "$A" -- call update_sketch --json '{"ref":"sk_work_ci","patch":[{"op":"set","path":"/seed","value":92}]}' > "$RUNNER_TEMP/edit.json"
+          node "$R" exec --workspace "$A" -- call export_model --json '{"ref":"sk_work_ci","format":"glb"}' > "$RUNNER_TEMP/after.json"
+          node -e 'const fs=require("fs"),crypto=require("crypto");const x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.path||!fs.existsSync(x.path))process.exit(1);const sha=p=>crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");if(sha(x.path)===sha(process.argv[2]))process.exit(2)' "$RUNNER_TEMP/after.json" "$RUNNER_TEMP/before.glb"
+          node "$R" exec --workspace "$A" -- call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-a.json"
+          DIR_A="$(node -e 'const fs=require("fs"),x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.dir)process.exit(1);process.stdout.write(x.dir)' "$RUNNER_TEMP/bundle-a.json")"
+          for file in recipe.json model.glb world.html; do test -s "$DIR_A/$file"; done
+          node "$R" checkpoint --workspace "$A" --recipe "$DIR_A/recipe.json" --ref sk_work_ci --title "Work-native 3.1 CI" --out "$RUNNER_TEMP/restore-capsule.json"
+          node "$R" install --workspace "$B" > "$RUNNER_TEMP/install-b.json"
+          node "$R" restore --workspace "$B" --capsule "$RUNNER_TEMP/restore-capsule.json" > "$RUNNER_TEMP/restore.out"
+          node "$R" exec --workspace "$B" -- call export_model --json '{"ref":"sk_work_ci","format":"bundle"}' > "$RUNNER_TEMP/bundle-b.json"
+          DIR_B="$(node -e 'const fs=require("fs"),x=JSON.parse(fs.readFileSync(process.argv[1]));if(!x.dir)process.exit(1);process.stdout.write(x.dir)' "$RUNNER_TEMP/bundle-b.json")"
+          node -e 'const fs=require("fs"),crypto=require("crypto"),path=require("path");const [a,b]=process.argv.slice(1);const h=p=>crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex");for(const f of ["recipe.json","model.glb","world.html"]){if(h(path.join(a,f))!==h(path.join(b,f))){console.error("Mismatch:",f);process.exit(1)}}' "$DIR_A" "$DIR_B"
+          if node "$R" restore --workspace "$B" --capsule "$RUNNER_TEMP/restore-capsule.json" > "$RUNNER_TEMP/duplicate.out" 2>&1; then
+            echo "::error::Duplicate restore unexpectedly succeeded"
+            exit 1
+          fi
           grep -Eqi 'exists|REF_EXISTS' "$RUNNER_TEMP/duplicate.out"
+          test -d "$A/.mojulo-chatgpt/home"
+          test -d "$B/.mojulo-chatgpt/home"
+          echo "Mojulo 3.1.0 npm install, reuse, mint, edit, export, recover and duplicate protection passed."
