@@ -33,11 +33,14 @@ With the plugin installed, ask:
 For a manual checkout, from the repository root:
 
 ```sh
-bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$PWD"
-.mojulo-runtime/bin/mojulo-work orient
+workspace="$(pwd -P)"
+runner="$workspace/work-plugin/skills/mojulo/scripts/runner.mjs"
+node "$runner" status --workspace "$workspace"
+node "$runner" install --workspace "$workspace" --version 3.1.0
+node "$runner" exec --workspace "$workspace" -- orient
 ```
 
-Bootstrap requires Node >=22.14 and npm, installs exactly `mojulo@3.0.0`, and creates workspace-local runtime and state. Follow the CLI's orientation, routing, and tool schemas before issuing operations. Top-level Google bridge dependencies are not needed for this path.
+The upcoming Work-plugin 0.3.0 targets exactly `mojulo@3.1.0`, with a version-aware runner and isolated state. This requires Node >=22.14 and npm. Until Mojulo 3.1.0 is on npm, use a supplied 3.1.0 RC tarball rather than substituting registry 3.0.0. The published 0.2.0 plugin and its runtime are unaffected by this branch. [Release and migration guide](work-plugin/README.md). Top-level Google bridge dependencies are not needed for this path.
 
 For iteration, edit the same ref. Return actual exports together with portable state for continuation in another workspace.
 
