@@ -37,7 +37,7 @@ bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$PWD"
 .mojulo-runtime/bin/mojulo-work orient
 ```
 
-Bootstrap requires Node >=22.14 and npm, installs exactly `mojulo@3.0.0`, and creates workspace-local runtime and state. Follow the CLI's orientation, routing, and tool schemas before issuing operations. Top-level Google bridge dependencies are not needed for this path.
+Bootstrap requires Node >=22.14 and npm, resolves npm `mojulo@latest` once for a new workspace, retains that exact version for reuse, and creates workspace-local runtime and state. Follow the CLI's orientation, routing, and tool schemas before issuing operations. Top-level Google bridge dependencies are not needed for this path.
 
 For iteration, edit the same ref. Return actual exports together with portable state for continuation in another workspace.
 
