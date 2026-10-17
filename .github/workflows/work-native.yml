@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, feat/work-native-release-candidate]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   work-native:
@@ -13,6 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22.14.0'
+      - name: Test bootstrap version policy
+        run: node --test test/bootstrap.test.js
       - name: Bootstrap Mojulo in a fresh workspace
         run: |
           mkdir -p "$RUNNER_TEMP/mojulo-work-test"
@@ -20,7 +23,8 @@ jobs:
       - name: Verify bootstrap reuse
         run: |
           bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-test"
-          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo 3.0.0"
+          VERSION="$(node -p "require(process.env.RUNNER_TEMP + '/mojulo-work-test/.mojulo-runtime/mojulo-version.json').version")"
+          test "$("$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" --version)" = "mojulo $VERSION"
       - name: Verify local CLI orientation
         run: |
           "$RUNNER_TEMP/mojulo-work-test/.mojulo-runtime/bin/mojulo-work" orient
@@ -50,7 +54,8 @@ jobs:
       - name: Restore recipe into fresh workspace B
         run: |
           mkdir -p "$RUNNER_TEMP/mojulo-work-restore"
-          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-restore"
+          VERSION="$(node -p "require(process.env.RUNNER_TEMP + '/mojulo-work-test/.mojulo-runtime/mojulo-version.json').version")"
+          bash work-plugin/skills/mojulo/scripts/bootstrap.sh "$RUNNER_TEMP/mojulo-work-restore" --version "$VERSION"
           A_DIR="$(cat "$RUNNER_TEMP/bundle-a-dir")"
           RECIPE="$A_DIR/recipe.json"
           node -e 'const fs=require("fs"); const manifest=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); fs.writeFileSync(process.argv[2],JSON.stringify({title:"Work-native CI",ref:"sk_work_ci",manifest}))' "$RECIPE" "$RUNNER_TEMP/restore.json"
